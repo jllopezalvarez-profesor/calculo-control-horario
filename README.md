@@ -8,7 +8,7 @@ Extensión para Chromium/Chrome que procesa la página de control de horario en 
 2. Abre Chromium y navega a `chromium://extensions/` (o `chrome://extensions/` en Chrome).
 3. Activa el **Modo de desarrollador** (interruptor en la esquina superior derecha).
 4. Haz clic en **Cargar extensión sin empaquetar**.
-5. Selecciona la carpeta **extension** del repositorio.
+5. Selecciona la carpeta **extension** del repositorio. **Importante**: La carpeta "extension" que se ha seleccionado, debe seguir existiendo si quieres que al abrir de nuevo Chrome tengas la funcionalidad disponible. Si borras la carpeta, tendrás que volver a descargarla y volver a añadirla a extensiones.
 
 La extensión quedará instalada y activa.
 
