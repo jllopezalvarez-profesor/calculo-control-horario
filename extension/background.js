@@ -2,7 +2,8 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
         id: "processTimeEntries",
         title: "Calcular fichajes",
-        contexts: ["page"]
+        contexts: ["page"],
+        documentUrlPatterns: ["https://app.control-de-horario.com/*"]
     });
 });
 
