@@ -22,10 +22,17 @@ La extensión quedará instalada y activa.
 
 ## Resultados
 
-La página de resultados muestra dos secciones:
+La página de resultados muestra tres secciones:
 
+- **Hoy**: estado del día actual.
+  - Si no hay fichajes: se indica que no hay datos.
+  - Si hay entrada pero no salida: se muestra la hora de entrada y el tiempo trabajado hasta el momento actual (en curso).
+  - Si hay entrada y salida: se muestra la hora de entrada y el total trabajado.
 - **Semanal**: horas totales trabajadas cada semana, con el rango de fechas (primer y último día con fichaje), ordenadas de más reciente a más antigua.
-- **Diario**: tabla con las horas y minutos trabajados cada día, ordenada de más reciente a más antigua.
+- **Diario**: tabla con las horas trabajadas cada día, ordenada de más reciente a más antigua. Cuando se han aplicado correcciones automáticas a los datos de un día, aparecen iconos en la fila correspondiente:
+  - 🔁 Se eliminaron fichajes duplicados (mismo tipo y hora repetidos).
+  - ✂️ Se descartaron fichajes intermedios (solo se conserva la primera entrada y la última salida del día).
+  - Al hacer clic en los iconos se despliega el detalle de qué fichajes concretos se eliminaron o descartaron.
 
 ## Notas
 
