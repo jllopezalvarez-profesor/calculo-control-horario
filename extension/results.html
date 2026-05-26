@@ -5,7 +5,19 @@
     <meta charset="UTF-8">
     <title>Resultados fichajes</title>
     <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        th {
+            border: 1px solid black;
+            padding: .5em;
+        }
+
         td {
+            border: 1px solid black;
+
+            padding: .5em;
             text-align: end;
         }
     </style>
@@ -13,6 +25,9 @@
 
 <body>
     <h1>Resumen de fichajes 📊</h1>
+
+    <h2>🕐 Hoy</h2>
+    <div id="today"></div>
 
     <h2>📆 Semanal</h2>
     <div id="weekly"></div>

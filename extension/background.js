@@ -68,6 +68,7 @@ function processTimeEntries() {
 
         const cleaned = [];
         const errors = [];
+        const adaptations = new Map();
 
         // 2. Procesar cada día
         for (const [day, items] of byDay.entries()) {
@@ -92,14 +93,21 @@ function processTimeEntries() {
                 continue;
             }
 
+            const discarded = items.filter(item => item !== firstEntry && item !== lastExit);
+            const discardedList = discarded.map(item => ({
+                type: item.type,
+                time: `${String(item.datetime.getHours()).padStart(2, "0")}:${String(item.datetime.getMinutes()).padStart(2, "0")}`
+            }));
+            adaptations.set(day, { hadIntermediates: entradas.length > 1 || salidas.length > 1, discardedList });
+
             if (firstEntry) cleaned.push(firstEntry);
             if (lastExit) cleaned.push(lastExit);
         }
 
-        return { cleaned, errors };
+        return { cleaned, errors, adaptations };
     }
 
-    function calculateDailyHours(entries) {
+    function calculateDailyHours(entries, duplicatesByDay, adaptations) {
         const byDay = new Map();
 
         for (const item of entries) {
@@ -148,7 +156,11 @@ function processTimeEntries() {
                 day,
                 hours,
                 minutes,
-                totalMinutes
+                totalMinutes,
+                hadDuplicates: duplicatesByDay.has(day),
+                duplicatesList: duplicatesByDay.get(day) || [],
+                hadIntermediates: adaptations.get(day)?.hadIntermediates || false,
+                intermediatesList: adaptations.get(day)?.discardedList || []
             });
         }
 
@@ -277,13 +289,63 @@ function processTimeEntries() {
     // Ordenar de más reciente a más antigua
     uniqueTimeEntries.sort((a, b) => a.datetime - b.datetime);
 
+    function calculateToday(entries) {
+        if (entries.length === 0) return { status: "no_data" };
+
+        const entradas = entries.filter(e => e.type === "Entrada").sort((a, b) => a.datetime - b.datetime);
+        const salidas = entries.filter(e => e.type === "Salida").sort((a, b) => a.datetime - b.datetime);
+
+        if (entradas.length === 0) return { status: "no_data" };
+
+        const exitTime = salidas.length > 0 ? salidas[salidas.length - 1].datetime : new Date();
+        const status = salidas.length > 0 ? "complete" : "entry_only";
+
+        const totalMs = exitTime - entradas[0].datetime;
+        const totalMinutes = Math.floor(totalMs / (1000 * 60));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        const entry = entradas[0].datetime;
+        const entryTime = `${String(entry.getHours()).padStart(2, "0")}:${String(entry.getMinutes()).padStart(2, "0")}`;
+
+        return { status, hours, minutes, totalMinutes, entryTime };
+    }
+
+    const rawGroupsByDay = new Map();
+    timeEntries.forEach(item => {
+        const day = getDayKey(item.datetime);
+        const key = `${item.type}|${item.datetime.getTime()}`;
+        if (!rawGroupsByDay.has(day)) rawGroupsByDay.set(day, new Map());
+        const dayMap = rawGroupsByDay.get(day);
+        dayMap.set(key, (dayMap.get(key) || 0) + 1);
+    });
+    const duplicatesByDay = new Map();
+    rawGroupsByDay.forEach((keyMap, day) => {
+        const dupes = [];
+        keyMap.forEach((count, key) => {
+            if (count > 1) {
+                const sepIdx = key.indexOf("|");
+                const type = key.substring(0, sepIdx);
+                const dt = new Date(Number(key.substring(sepIdx + 1)));
+                const time = `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+                dupes.push({ type, time });
+            }
+        });
+        if (dupes.length > 0) duplicatesByDay.set(day, dupes);
+    });
+
+    const todayKey = getDayKey(new Date());
+    const todayEntries = uniqueTimeEntries.filter(e => getDayKey(e.datetime) === todayKey);
+    const todayData = calculateToday(todayEntries);
+
     const cleanedTimeEntries = cleanTimeEntries(uniqueTimeEntries);
 
-    const dailyHours = calculateDailyHours(cleanedTimeEntries.cleaned);
+    const dailyHours = calculateDailyHours(cleanedTimeEntries.cleaned, duplicatesByDay, cleanedTimeEntries.adaptations);
     const weeklyHours = calculateWeeklyHours(cleanedTimeEntries.cleaned);
 
     chrome.storage.local.set({
         resultsData: {
+            todayData,
             dailyHours,
             weeklyHours
         }
